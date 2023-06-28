@@ -12,15 +12,15 @@ import (
 )
 
 type spec struct {
-	Debug      bool   `envconfig:"PLUGIN_DEBUG"`
-	Address    string `envconfig:"PLUGIN_ADDRESS" default:":3000"`
-	Secret     string `envconfig:"PLUGIN_SECRET"`
-	Token      string `envconfig:"TOKEN"`
-	ServerType string `envconfig:"SERVERTYPE"`
-	Namespace  string `envconfig:"REPO_OWNER"`
-	Name       string `envconfig:"REPO_NAME"`
-	Branch     string `envconfig:"REPO_BRANCH" default:"master"`
-	Path       string `envconfig:"YAML_PATH" default:".drone.yml"`
+	Debug                    bool   `envconfig:"PLUGIN_DEBUG"`
+	Address                  string `envconfig:"PLUGIN_ADDRESS" default:":3000"`
+	Secret                   string `envconfig:"PLUGIN_SECRET"`
+	Token                    string `envconfig:"TOKEN"`
+	ServerType               string `envconfig:"SERVERTYPE"`
+	DroneConfigNamespaceTemp string `envconfig:"DRONE_CONFIG_NAMESPACE_TEMP"`
+	DroneConfigRepoNameTemp  string `envconfig:"DRONE_CONFIG_REPONAME_TEMP"`
+	DroneConfigBranchTemp    string `envconfig:"DRONE_CONFIG_BRANCH_TEMP" default:"master"`
+	DroneConfigPathTemp      string `envconfig:"DRONE_CONFIG_YAMLPATH_TEMP" default:".drone.yml"`
 }
 
 func main() {
@@ -42,10 +42,10 @@ func main() {
 	if spec.ServerType == "" {
 		logrus.Warnln("missing servertype gitea | github")
 	}
-	if spec.Namespace == "" {
+	if spec.DroneConfigNamespaceTemp == "" {
 		logrus.Warnln("missing repository owner")
 	}
-	if spec.Name == "" {
+	if spec.DroneConfigRepoNameTemp == "" {
 		logrus.Warnln("missing repository name")
 	}
 	if spec.Address == "" {
@@ -54,10 +54,10 @@ func main() {
 
 	handler := config.Handler(
 		plugin.New(
-			spec.Namespace,
-			spec.Name,
-			spec.Path,
-			spec.Branch,
+			spec.DroneConfigNamespaceTemp,
+			spec.DroneConfigRepoNameTemp,
+			spec.DroneConfigPathTemp,
+			spec.DroneConfigBranchTemp,
 			spec.ServerType,
 			spec.Token,
 		),
@@ -66,7 +66,7 @@ func main() {
 	)
 
 	logrus.Infof("server listening on address %s", spec.Address)
-
+	logrus.Infof("debug:%s namespace:%s reponame:%s branch:%s path:%s", spec.Debug, spec.DroneConfigNamespaceTemp, spec.DroneConfigRepoNameTemp, spec.DroneConfigBranchTemp, spec.DroneConfigPathTemp)
 	http.Handle("/", handler)
 	logrus.Fatal(http.ListenAndServe(spec.Address, nil))
 }

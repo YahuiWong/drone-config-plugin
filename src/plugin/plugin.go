@@ -6,6 +6,7 @@ package plugin
 
 import (
 	"context"
+	"drone-config-plugin/src/utils"
 	"encoding/base64"
 	"fmt"
 	"net/url"
@@ -14,33 +15,40 @@ import (
 	"code.gitea.io/sdk/gitea"
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/drone-go/plugin/config"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 
 	"github.com/google/go-github/github"
 )
 
 // New returns a new configuration plugin.
-func New(namespace, name, path, branch, servertype, token string) config.Plugin {
+func New(DroneConfigNamespaceTemp, DroneConfigRepoNameTemp, DroneConfigPathTemp, DroneConfigBranchTemp, servertype, token string) config.Plugin {
 	return &plugin{
-		namespace:  namespace,
-		name:       name,
-		path:       path,
-		branch:     branch,
-		token:      token,
-		servertype: servertype,
+		DroneConfigNamespaceTemp: DroneConfigNamespaceTemp,
+		DroneConfigRepoNameTemp:  DroneConfigRepoNameTemp,
+		DroneConfigPathTemp:      DroneConfigPathTemp,
+		DroneConfigBranchTemp:    DroneConfigBranchTemp,
+		token:                    token,
+		servertype:               servertype,
 	}
 }
 
 type plugin struct {
-	namespace  string
-	name       string
-	path       string
-	branch     string
-	token      string
-	servertype string
+	DroneConfigNamespaceTemp string
+	DroneConfigRepoNameTemp  string
+	DroneConfigPathTemp      string
+	DroneConfigBranchTemp    string
+	token                    string
+	servertype               string
 }
 
 func (p *plugin) Find(ctx context.Context, req *config.Request) (*drone.Config, error) {
+
+	namespace, _ := utils.GetTempString(p.DroneConfigNamespaceTemp, &req)
+	reponame, _ := utils.GetTempString(p.DroneConfigRepoNameTemp, &req)
+	branch, _ := utils.GetTempString(p.DroneConfigBranchTemp, &req)
+	path, _ := utils.GetTempString(p.DroneConfigPathTemp, &req)
+	logrus.Debugf("namespace:%s reponame:%s branch:%s path:%s", namespace, reponame, branch, path)
 	if strings.ToLower(p.servertype) == "github" {
 		// creates a github client used to fetch the yaml.
 		trans := oauth2.NewClient(ctx, oauth2.StaticTokenSource(
@@ -52,14 +60,10 @@ func (p *plugin) Find(ctx context.Context, req *config.Request) (*drone.Config, 
 		// with 0.9 which means the configuration file path is
 		// always empty. default to .drone.yml. This can be
 		// removed as soon as drone-go is fully updated for 0.9.
-		path := req.Repo.Config
-		if path == "" {
-			path = ".drone.yml"
-		}
 
 		// get the configuration file from the github
 		// repository for the build ref.
-		data, _, _, err := client.Repositories.GetContents(ctx, req.Repo.Namespace, req.Repo.Name, path, &github.RepositoryContentGetOptions{Ref: req.Build.After})
+		data, _, _, err := client.Repositories.GetContents(ctx, namespace, reponame, path, &github.RepositoryContentGetOptions{Ref: branch})
 		if err == nil && data != nil {
 			// get the file contents.
 			content, err := data.GetContent()
@@ -74,7 +78,7 @@ func (p *plugin) Find(ctx context.Context, req *config.Request) (*drone.Config, 
 		// if the configuration file does not exist,
 		// we should fallback to a global configuration
 		// file stored in a central repository.
-		data, _, _, err = client.Repositories.GetContents(ctx, p.namespace, p.name, p.path, &github.RepositoryContentGetOptions{Ref: p.branch})
+		data, _, _, err = client.Repositories.GetContents(ctx, namespace, reponame, path, &github.RepositoryContentGetOptions{Ref: branch})
 		if err != nil {
 			return nil, err
 		}
@@ -99,11 +103,11 @@ func (p *plugin) Find(ctx context.Context, req *config.Request) (*drone.Config, 
 		if newClientERR != nil {
 			return nil, newClientERR
 		}
-		repo, _, repoerr := client.GetRepo(p.namespace, p.name)
+		_, _, repoerr := client.GetRepo(namespace, reponame)
 		if repoerr != nil {
 			return nil, repoerr
 		}
-		contentsres, _, getcerr := client.GetContents(repo.Owner.UserName, repo.Name, repo.DefaultBranch, ".drone.yml")
+		contentsres, _, getcerr := client.GetContents(namespace, reponame, branch, path)
 		if getcerr != nil {
 			return nil, getcerr
 		}
