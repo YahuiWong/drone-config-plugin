@@ -1,24 +1,25 @@
+# drone-config-plugin
+## gitea
 
-可以通过您的 gitea web 界面来创建 apiKey token： Settings | Applications | Generate New Token. 注意选择必要的权限
+> Generate New Token： Settings | Applications | Generate New Token. 
 
-配置 drone
+drone environment
 
 ```yaml
       - DRONE_YAML_ENDPOINT=http://git.local.lan:3003
       - DRONE_YAML_SECRET=b6a11a2ec2e957233e30d35d2dd4d1b4
 ```
 
-在 drone-config-plugin 配置环境变量
+drone-config-plugin environment
 
 ```yaml
       - PLUGIN_SECRET=b6a11a2ec2e957233e30d35d2dd4d1b4
-      - DRONE_DEBUG=true
-      - DRONE_TRACE=true
+      - PLUGIN_DEBUG=true
       - TOKEN=a9e569dbb06d301267f17ec9a78e71b04f0dbe0c
       - SERVERTYPE=gitea
-      - REPO_OWNER=adminuser
-      - REPO_NAME=dronefiles
-      - REPO_BRANCH=main
-      - YAML_PATH=.drone.yml
+      - DRONE_CONFIG_NAMESPACE_TEMP={{ .Repo.Namespace }}
+      - DRONE_CONFIG_REPONAME_TEMP=dronefiles #{{ .Repo.Name }}
+      - DRONE_CONFIG_BRANCH_TEMP={{ .Repo.Branch }}
+      - DRONE_CONFIG_YAMLPATH_TEMP={{ .Repo.Name }}/{{ .Repo.Branch }}/.drone.yml
 ```
 
