@@ -12,14 +12,15 @@ import (
 )
 
 type spec struct {
-	Debug     bool   `envconfig:"PLUGIN_DEBUG"`
-	Address   string `envconfig:"PLUGIN_ADDRESS" default:":3000"`
-	Secret    string `envconfig:"PLUGIN_SECRET"`
-	Token     string `envconfig:"GITHUB_TOKEN"`
-	Namespace string `envconfig:"GITHUB_REPO_OWNER"`
-	Name      string `envconfig:"GITHUB_REPO_NAME"`
-	Branch    string `envconfig:"GITHUB_REPO_BRANCH" default:"master"`
-	Path      string `envconfig:"GITHUB_YAML_PATH" default:".drone.yml"`
+	Debug      bool   `envconfig:"PLUGIN_DEBUG"`
+	Address    string `envconfig:"PLUGIN_ADDRESS" default:":3000"`
+	Secret     string `envconfig:"PLUGIN_SECRET"`
+	Token      string `envconfig:"TOKEN"`
+	ServerType string `envconfig:"SERVERTYPE"`
+	Namespace  string `envconfig:"REPO_OWNER"`
+	Name       string `envconfig:"REPO_NAME"`
+	Branch     string `envconfig:"REPO_BRANCH" default:"master"`
+	Path       string `envconfig:"YAML_PATH" default:".drone.yml"`
 }
 
 func main() {
@@ -36,13 +37,16 @@ func main() {
 		logrus.Fatalln("missing secret key")
 	}
 	if spec.Token == "" {
-		logrus.Warnln("missing github token")
+		logrus.Warnln("missing token")
+	}
+	if spec.ServerType == "" {
+		logrus.Warnln("missing servertype gitea | github")
 	}
 	if spec.Namespace == "" {
-		logrus.Warnln("missing github repository owner")
+		logrus.Warnln("missing repository owner")
 	}
 	if spec.Name == "" {
-		logrus.Warnln("missing github repository name")
+		logrus.Warnln("missing repository name")
 	}
 	if spec.Address == "" {
 		spec.Address = ":3000"
@@ -54,6 +58,7 @@ func main() {
 			spec.Name,
 			spec.Path,
 			spec.Branch,
+			spec.ServerType,
 			spec.Token,
 		),
 		spec.Secret,
