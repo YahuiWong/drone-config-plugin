@@ -96,25 +96,31 @@ func (p *plugin) Find(ctx context.Context, req *config.Request) (*drone.Config, 
 		clilentOption := gitea.SetToken(p.token)
 		httpUrl, urlerr := url.Parse(req.Repo.HTTPURL)
 		if urlerr != nil {
+			logrus.Debugf("urlerr:%s ", urlerr)
 			return nil, urlerr
 		}
 
 		client, newClientERR := gitea.NewClient(fmt.Sprintf("%s://%s", httpUrl.Scheme, httpUrl.Host), clilentOption)
 		if newClientERR != nil {
+			logrus.Debugf("newClientERR:%s ", newClientERR)
 			return nil, newClientERR
 		}
 		_, _, repoerr := client.GetRepo(namespace, reponame)
 		if repoerr != nil {
+			logrus.Debugf("repoerr:%s ", repoerr)
 			return nil, repoerr
 		}
 		contentsres, _, getcerr := client.GetContents(namespace, reponame, branch, path)
 		if getcerr != nil {
+			logrus.Debugf("getcerr:%s ", getcerr)
 			return nil, getcerr
 		}
 		sDec, base64err := base64.StdEncoding.DecodeString(*(*contentsres).Content)
 		if base64err != nil {
+			logrus.Debugf("base64err:%s ", base64err)
 			return nil, base64err
 		} else {
+			logrus.Debugf("Data:%s ", string(sDec))
 			return &drone.Config{
 				Data: string(sDec),
 			}, nil
