@@ -13,7 +13,7 @@ jobs:
         uses: pr-mpt/actions-commit-hash@v1
       - name: Get branch name
         id: branch-name
-        uses: tj-actions/branch-names@v4.5
+        uses: tj-actions/branch-names@v7.0.7
       -
         name: Checkout
         uses: actions/checkout@v2
