@@ -1,7 +1,9 @@
 package tests
 
 import (
+	"encoding/base64"
 	gitlab "gitlab.com/gitlab-org/api/client-go"
+	"log"
 	"testing"
 )
 
@@ -36,12 +38,19 @@ func TestBasicOAuthClient(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// List all projects
-	projects, _, err := git.Projects.ListProjects(nil)
+	gf := &gitlab.GetFileOptions{
+		Ref: gitlab.Ptr("main"),
+	}
+	f, _, err := git.RepositoryFiles.GetFile("admin1/test", "README.md", gf)
 	if err != nil {
-		t.Fatal(err)
+		log.Fatal(err)
 	}
 
-	t.Logf("Found %d projects", len(projects))
-
+	log.Printf("File contains: %s", f.Content)
+	sDec, base64err := base64.StdEncoding.DecodeString(f.Content)
+	if base64err != nil {
+		t.Logf("Error decoding string: %s ", base64err.Error())
+	} else {
+		t.Log(string(sDec))
+	}
 }
