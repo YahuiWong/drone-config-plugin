@@ -1,8 +1,8 @@
 module drone-config-plugin
 
-go 1.22
+go 1.23.0
 
-toolchain go1.24.2
+toolchain go1.24.5
 
 require (
 	code.gitea.io/sdk/gitea v0.15.1
