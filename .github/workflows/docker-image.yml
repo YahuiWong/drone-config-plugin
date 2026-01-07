@@ -35,4 +35,5 @@ jobs:
         with:
           context: .
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: yahuiwong/drone-config-plugin:${{ steps.branch-name.outputs.current_branch }}-${{ steps.commit.outputs.short }}
